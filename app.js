@@ -1,5 +1,5 @@
 const express = require("express");
-const rateLimiter = require("./rateLimiter");
+const rateLimiter = require("./middleware/rateLimiter");
 
 const app = express();
 app.use(express.json());
