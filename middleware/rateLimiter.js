@@ -1,18 +1,23 @@
 const { default: mongoose } = require("mongoose");
 const RateLimit = require("../models/rateLimit.model");
-
-const WINDOW_SIZE = 60 * 1000;
-const MAX_REQUESTS = 10; 
+const rateLimitConfig = require("../config/rateLimitConfig");
 
 const rateLimiter = async (req, res, next) => {
     try {
-        const identifier = req.ip;
+        const identifier = `${req.ip} : ${req.path}`;
         const now = Date.now();
+
+        const config = rateLimitConfig[req.path] || rateLimitConfig.default;
+        const WINDOW_SIZE = config.windowMs;
+        const MAX_REQUESTS = config.maxRequests;
 
         let result = await RateLimit.findById(identifier);
 
         if (!result) {
-            result = await RateLimit.create({ _id: identifier, timestamps: [now] });
+            result = await RateLimit.create({
+                 _id: identifier, timestamps: [now], 
+                 expireAt: new Date(now + WINDOW_SIZE) 
+                });
             return next();
         }
 
@@ -26,6 +31,7 @@ const rateLimiter = async (req, res, next) => {
         validTimestamps.push(now);
 
         result.timestamps = validTimestamps;
+        result.expireAt = new Date(now + WINDOW_SIZE);
         await result.save();
 
         next();

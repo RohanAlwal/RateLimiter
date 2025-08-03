@@ -9,4 +9,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Hello world" });
 });
 
+app.get("/api/login", (req, res) => res.json({ message: "login ok" }));
+
 module.exports = app;
